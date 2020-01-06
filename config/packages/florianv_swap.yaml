@@ -1,0 +1,4 @@
+florianv_swap:
+    providers:
+        fixer:
+            access_key: secret
