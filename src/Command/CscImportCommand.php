@@ -10,13 +10,12 @@ use League\Csv\Reader;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 class CscImportCommand extends Command
 {
-    private const TEST_MOD_ACTIVE = true;
-
     /**
      * @var EntityManagerInterface
      */
@@ -51,13 +50,16 @@ class CscImportCommand extends Command
 
     protected function configure(): void
     {
-        $this->addArgument('filename', InputArgument::REQUIRED, 'Filename?');
+        $this
+            ->addArgument('filename', InputArgument::REQUIRED, 'Filename?')
+            ->addOption('test', 't', InputOption::VALUE_NONE, 'Execute the command in test mode.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): void
     {
         $this->terminalMessage = new SymfonyStyle($input, $output);
         $fileName = $input->getArgument('filename');
+        $testMod = $input->getOption('test');
 
         if (!file_exists($fileName)) {
             $this->terminalMessage->error(sprintf('File "%s" does not exists!', $fileName));
@@ -65,7 +67,6 @@ class CscImportCommand extends Command
             return;
         }
         $csvReader = $this->initializeCsvReader($fileName);
-        $testMod = $this->testMode();
 
         /* Creating a currency transfer coefficient.
                 $swap = new Builder();
@@ -104,18 +105,6 @@ class CscImportCommand extends Command
         if ($errors) {
             $this->errorsDisplay($errors);
         }
-    }
-
-    private function testMode(): bool
-    {
-        $testMod = false;
-        $answer = $this->terminalMessage->ask('Do you want to execute the command it test mode?', 'no');
-        if ($answer !== 'no') {
-            $testMod = self::TEST_MOD_ACTIVE;
-            $this->terminalMessage->note('Test mode is active.');
-        }
-
-        return $testMod;
     }
 
     private function initializeCsvReader(string $fileName): Reader
